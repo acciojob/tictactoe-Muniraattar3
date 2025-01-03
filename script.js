@@ -1,82 +1,56 @@
-// Reference elements
-const playerInput = document.getElementById("player-input");
-const player1Input = document.getElementById("player-1");
-const player2Input = document.getElementById("player-2");
-const submitButton = document.getElementById("submit");
-const gameBoard = document.getElementById("game-board");
-const messageDiv = document.querySelector(".message");
-const boardContainer = document.querySelector(".board");
+document.addEventListener("DOMContentLoaded", () => {
+    const submitButton = document.getElementById("submit");
+    const player1Input = document.getElementById("player1");
+    const player2Input = document.getElementById("player2");
 
-// Variables to track game state
-let player1, player2, currentPlayer;
-let board = Array(9).fill(null);
+    submitButton.addEventListener("click", () => {
+        const player1 = player1Input?.value || "Player 1";
+        const player2 = player2Input?.value || "Player 2";
 
-// Winning combinations
-const winningCombos = [
-    [0, 1, 2],
-    [3, 4, 5],
-    [6, 7, 8],
-    [0, 3, 6],
-    [1, 4, 7],
-    [2, 5, 8],
-    [0, 4, 8],
-    [2, 4, 6]
-];
+        document.querySelector(".message").textContent = `${player1}, you're up!`;
 
-// Start the game
-submitButton.addEventListener("click", () => {
-    player1 = player1Input.value || "Player 1";
-    player2 = player2Input.value || "Player 2";
-    currentPlayer = player1;
-    messageDiv.textContent = `${currentPlayer}, you're up!`;
-    playerInput.style.display = "none";
-    gameBoard.style.display = "block";
-    createBoard();
+        initializeGame(player1, player2);
+    });
 });
 
-// Function to create the board
-function createBoard() {
-    boardContainer.innerHTML = ""; // Clear existing board
+function initializeGame(player1, player2) {
+    const boardContainer = document.querySelector(".board-container");
+    boardContainer.innerHTML = ""; // Clear previous game board
+
+    const board = Array(9).fill(null);
+    let currentPlayer = player1;
+
     for (let i = 0; i < 9; i++) {
         const cell = document.createElement("div");
         cell.id = i;
-        cell.addEventListener("click", handleCellClick);
+        cell.classList.add("cell");
+        cell.addEventListener("click", () => handleCellClick(i, board, currentPlayer, player1, player2));
         boardContainer.appendChild(cell);
     }
 }
 
-// Handle cell click
-function handleCellClick(event) {
-    const cell = event.target;
-    const cellIndex = parseInt(cell.id);
+function handleCellClick(index, board, currentPlayer, player1, player2) {
+    if (!board[index]) {
+        board[index] = currentPlayer === player1 ? "X" : "O";
+        document.getElementById(index).textContent = board[index];
 
-    if (!board[cellIndex]) {
-        board[cellIndex] = currentPlayer === player1 ? "X" : "O";
-        cell.textContent = board[cellIndex];
-        cell.classList.add("taken");
-
-        if (checkWin()) {
-            messageDiv.textContent = `${currentPlayer}, congratulations you won!`;
-            disableBoard();
-        } else if (board.every((cell) => cell)) {
-            messageDiv.textContent = "It's a draw!";
+        if (checkWinner(board, currentPlayer)) {
+            document.querySelector(".message").textContent = `${currentPlayer}, congratulations you won!`;
         } else {
             currentPlayer = currentPlayer === player1 ? player2 : player1;
-            messageDiv.textContent = `${currentPlayer}, you're up!`;
+            document.querySelector(".message").textContent = `${currentPlayer}, you're up!`;
         }
     }
 }
 
-// Check if the current player has won
-function checkWin() {
-    return winningCombos.some((combo) => 
-        combo.every((index) => board[index] === (currentPlayer === player1 ? "X" : "O"))
-    );
-}
+function checkWinner(board, player) {
+    const winningCombinations = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8],
+        [0, 3, 6], [1, 4, 7], [2, 5, 8],
+        [0, 4, 8], [2, 4, 6],
+    ];
 
-// Disable further clicks on the board
-function disableBoard() {
-    document.querySelectorAll(".board div").forEach((cell) => {
-        cell.removeEventListener("click", handleCellClick);
-    });
+    return winningCombinations.some((combo) =>
+        combo.every((index) => board[index] === (player === player1 ? "X" : "O"))
+    );
 }
